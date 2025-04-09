@@ -7,15 +7,12 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 
+"""
+Given a video file and sampling_frequency, finds the landmarks and writes them out to a json file
+sampling_frequency of n means 1 in ever n frames is processed/saved
 
-
-def write_landmarks_to_csv(landmarks, timestamp, csv_data):
-    print(f"Landmark coordinates for frame {timestamp}:")
-    for idx, landmark in enumerate(landmarks):
-        # print(f"idx: {idx}, {mp_pose.PoseLandmark(idx).name}: (x: {landmark.x}, y: {landmark.y}, z: {landmark.z})")
-        csv_data.append([timestamp, mp_pose.PoseLandmark(idx).name, landmark.x, landmark.y, landmark.z])
-    print("\n")
-
+Returns the json object, also writes it to a file
+"""
 def process_video(video_in_file, json_out_file, sampling_frequency=3):
     cap = cv2.VideoCapture(video_in_file)
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -58,6 +55,10 @@ def process_video(video_in_file, json_out_file, sampling_frequency=3):
         json.dump(landmarks_json, json_file, ensure_ascii=False, indent=4)
     return landmarks_json
 
+"""
+Finds the angle from the vector formed by two points
+Returns the x, y, and z angles in degrees
+"""
 def find_angle(point1, point2):
     # return the angles in the x, y, and z directions
     vector = (point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2])
@@ -73,7 +74,11 @@ def find_angle(point1, point2):
     return theta_x, theta_y, theta_z
 
 
+"""
+Helper function to get a list of angles from the vector formed by two points
+"""
 def get_angles(landmarks_json, point1_name, point2_name, angle_axis):
+    # TODO modify this so it works with three points (rn it works w two because it assumes the torso is upright i.e. along the z axis)
     angles = []
     for time in times:
         point1 = landmarks_json[time][point1_name]
