@@ -131,27 +131,34 @@ if __name__ == '__main__':
     times = sorted(landmarks_json.keys())
     print('Times:', times) # lists each timestamp at which we have saved the body pose. This can be adjusted with the sampling_frequency parameter
 
-    r_shoulder_pitches = get_angles(landmarks_json, 'RIGHT_SHOULDER', 'RIGHT_ELBOW', 0)
-    l_shoulder_pitches = get_angles(landmarks_json, 'LEFT_SHOULDER', 'LEFT_ELBOW', 0)
+    r_shoulder_rolls = get_angles(landmarks_json, 'RIGHT_SHOULDER', 'RIGHT_ELBOW', 0)
+    l_shoulder_rolls = get_angles(landmarks_json, 'LEFT_SHOULDER', 'LEFT_ELBOW', 0)
+    
+    r_shoulder_rolls = [-elem + 40 for elem in r_shoulder_rolls]
+    l_shoulder_rolls = [elem - 40 for elem in l_shoulder_rolls]
+    
+    
+    # r_shoulder_rolls = correct_shoulder_rolls(r_shoulder_rolls)
+    # l_shoulder_rolls = correct_shoulder_rolls(l_shoulder_rolls)
     
     # r_shoulder_pitches2 = get_angles2(landmarks_json, "RIGHT_HIP", "RIGHT_SHOULDER", "RIGHT_ELBOW", 0)
     # l_shoulder_pitches2 = get_angles2(landmarks_json, "LEFT_HIP", "LEFT_SHOULDER", "LEFT_ELBOW", 0)
     
     with open("nao_angles.csv", "w") as f:
         writer = csv.writer(f)
-        writer.writerow(["Time", "RShoulderPitch", "LShoulderPitch"])
+        writer.writerow(["Time", "RShoulderRoll", "LShoulderRoll"])
         for i in range(len(times)):
-            row = [times[i], r_shoulder_pitches[i], l_shoulder_pitches[i]]
+            row = [times[i], r_shoulder_rolls[i], l_shoulder_rolls[i]]
             writer.writerow(row)
 
     # Plot the right shoulder pitches as a function of time
-    plt.plot(times, r_shoulder_pitches, label='Right Shoulder Pitch')
+    plt.plot(times, r_shoulder_rolls, label='Right Shoulder Roll')
     # plt.plot(times, r_shoulder_pitches2, label='Right Shoulder Pitch 2')
-    plt.plot(times, l_shoulder_pitches, label='Left Shoulder Pitch')
+    plt.plot(times, l_shoulder_rolls, label='Left Shoulder Roll')
     # plt.plot(times, l_shoulder_pitches2, label='Left Shoulder Pitch 2')
     plt.xlabel('Time (s)')
-    plt.ylabel('Shoulder Pitch (degrees)')
-    plt.title('Shoulder Pitches vs Time')
+    plt.ylabel('Shoulder Roll (degrees)')
+    plt.title('Shoulder Rolls vs Time')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -159,3 +166,5 @@ if __name__ == '__main__':
     """
     Create Nao pose with angle interpolation at times from time list and angles from angles list
     """
+
+# %%
