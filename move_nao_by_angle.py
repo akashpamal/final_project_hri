@@ -38,7 +38,7 @@ except Exception as e:
 motionProxy.wakeUp()
 # Optionally, set stiffness for the specific joints.
 joint_names = ["RShoulderRoll", "LShoulderRoll"]
-# motionProxy.setStiffnesses(["LElbowRoll"], 1.0)
+# motionProxy.setStiffnesses(["RShoulderPitch"], 1.0)
 motionProxy.setStiffnesses(joint_names, 1.0)
 
 interpolation_time = 0.3  # seconds for each command
@@ -59,7 +59,7 @@ for i, row in enumerate(angles_data):
     print("Sample", i, "Time:", t_val, "Target angles (degrees):", target_angles_deg)
     
     # Command the robot to move to the given angles.
-    motionProxy.angleInterpolation(joint_names, target_angles_rad, times, True)
+    motionProxy.angleInterpolation(joint_names, target_angles_rad, 0.1, True)
     
     time.sleep(0.05)
 
