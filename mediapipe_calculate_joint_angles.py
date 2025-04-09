@@ -1,4 +1,3 @@
-
 import cv2
 import mediapipe as mp
 import csv
@@ -74,6 +73,27 @@ def find_angle(point1, point2):
     return theta_x, theta_y, theta_z
 
 
+
+# %%
+def find_angles_three_points(point1, point2, point3):
+    vector1 = (point2[0] - point1[0], point2[1] - point1[1], point2[2] - point1[2])
+    vector2 = (point3[0] - point1[0], point3[1] - point1[1], point3[2] - point1[2])
+    angles = []
+    for i in range(3):
+        vector1_projection = [vector1[0], vector1[1], vector1[2]]
+        vector2_projection = [vector2[0], vector2[1], vector2[2]]
+        vector1_projection[i] = 0
+        vector2_projection[i] = 0
+        dot_product = sum(a * b for a, b in zip(vector1_projection, vector2_projection))
+        magnitude1 = math.sqrt(sum(a ** 2 for a in vector1_projection))
+        magnitude2 = math.sqrt(sum(a ** 2 for a in vector2_projection))
+        cos_theta = dot_product / (magnitude1 * magnitude2)
+        # cos_theta = max(-1, min(1, cos_theta))  # Clamp the value to avoid NaN
+        theta = math.degrees(math.acos(cos_theta))
+        angles.append(theta)
+    return angles
+
+# %%
 """
 Helper function to get a list of angles from the vector formed by two points
 """
@@ -88,6 +108,18 @@ def get_angles(landmarks_json, point1_name, point2_name, angle_axis):
         angles.append(wanted_angles)
     return angles
 
+def get_angles2(landmarks_json, point1_name, point2_name, point3_name, angle_axis):
+    return_angles = []
+    for time in times:
+        point1 = landmarks_json[time][point1_name]
+        point2 = landmarks_json[time][point2_name]
+        point3 = landmarks_json[time][point3_name]
+        angles = find_angles_three_points(point1, point2, point3)
+        wanted_angles = angles[angle_axis]
+        return_angles.append(wanted_angles)
+    return return_angles
+
+# %%
 if __name__ == '__main__':
     # Initialize MediaPipe Pose and Drawing utilities
     mp_pose = mp.solutions.pose
@@ -95,16 +127,28 @@ if __name__ == '__main__':
     pose = mp_pose.Pose()
 
 
-    landmarks_json = process_video(video_in_file='./r_arm.mov', json_out_file='landmarks.json') # also returns the json
+    landmarks_json = process_video(video_in_file='./movement.mov', json_out_file='landmarks.json') # also returns the json
     times = sorted(landmarks_json.keys())
     print('Times:', times) # lists each timestamp at which we have saved the body pose. This can be adjusted with the sampling_frequency parameter
 
     r_shoulder_pitches = get_angles(landmarks_json, 'RIGHT_SHOULDER', 'RIGHT_ELBOW', 0)
     l_shoulder_pitches = get_angles(landmarks_json, 'LEFT_SHOULDER', 'LEFT_ELBOW', 0)
+    
+    # r_shoulder_pitches2 = get_angles2(landmarks_json, "RIGHT_HIP", "RIGHT_SHOULDER", "RIGHT_ELBOW", 0)
+    # l_shoulder_pitches2 = get_angles2(landmarks_json, "LEFT_HIP", "LEFT_SHOULDER", "LEFT_ELBOW", 0)
+    
+    with open("nao_angles.csv", "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Time", "RShoulderPitch", "LShoulderPitch"])
+        for i in range(len(times)):
+            row = [times[i], r_shoulder_pitches[i], l_shoulder_pitches[i]]
+            writer.writerow(row)
 
     # Plot the right shoulder pitches as a function of time
     plt.plot(times, r_shoulder_pitches, label='Right Shoulder Pitch')
+    # plt.plot(times, r_shoulder_pitches2, label='Right Shoulder Pitch 2')
     plt.plot(times, l_shoulder_pitches, label='Left Shoulder Pitch')
+    # plt.plot(times, l_shoulder_pitches2, label='Left Shoulder Pitch 2')
     plt.xlabel('Time (s)')
     plt.ylabel('Shoulder Pitch (degrees)')
     plt.title('Shoulder Pitches vs Time')
