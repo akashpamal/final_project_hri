@@ -4,14 +4,15 @@ import time
 from naoqi import ALProxy
 
 angles_list = []
-with open('output_angles.csv', 'r') as f:
+with open('C:/Users/ishah/OneDrive/Documents/HRI/final_project_hri/output_angles.csv', 'r') as f:
     reader = csv.reader(f)
     for row in reader:
         angle_values = list(map(float, row))
         angles_list.append(angle_values)
 
-# TRANQUILITY = "192.168.1.30"
-TRANQUILITY = "172.0.0.1"
+
+TRANQUILITY = "192.168.1.30"
+# TRANQUILITY = "172.0.0.1"
 robot_port = 9559        
 
 try:
@@ -20,8 +21,11 @@ except Exception as e:
     print("Could not create ALMotion proxy:", e)
     exit()
 
-
+# Wake up the robot (activates the motors).
+motionProxy.wakeUp()
+# Optionally, set stiffness for the specific joints.
 joint_names = ["RShoulderPitch", "RShoulderRoll", "RElbowYaw"]
+motionProxy.setStiffnesses(joint_names, 1.0)
 
 interpolation_time = 1.0  # seconds for each command
 times = [interpolation_time] * len(joint_names)  # Same duration for all joints
@@ -42,9 +46,12 @@ for i, angle_values in enumerate(angles_list):
     #   - target_angles: list of target angles (in radians)
     #   - times: list of durations (seconds) for the interpolation to complete
     #   - isAbsolute: True so that the angles are interpreted as absolute values.
+    # Test a simple movement on one joint to see if the robot responds.
+    # motionProxy.angleInterpolation("RShoulderPitch", math.radians(20), 1.0, True)
+
     motionProxy.angleInterpolation(joint_names, target_angles, times, True)
         
-    time.sleep(0.5)
+    time.sleep(0.2)
 
 
 print("All commands sent to the Nao robot.")
