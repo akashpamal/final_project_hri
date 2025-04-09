@@ -46,12 +46,13 @@ for i, angle_values in enumerate(angles_list):
     #   - target_angles: list of target angles (in radians)
     #   - times: list of durations (seconds) for the interpolation to complete
     #   - isAbsolute: True so that the angles are interpreted as absolute values.
+
     # Test a simple movement on one joint to see if the robot responds.
     # motionProxy.angleInterpolation("RShoulderPitch", math.radians(20), 1.0, True)
 
     motionProxy.angleInterpolation(joint_names, target_angles, times, True)
         
-    time.sleep(0.2)
+    time.sleep(0.5)
 
 
 print("All commands sent to the Nao robot.")
