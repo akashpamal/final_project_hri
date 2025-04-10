@@ -13,7 +13,7 @@ sampling_frequency of n means 1 in ever n frames is processed/saved
 
 Returns the json object, also writes it to a file
 """
-def process_video(video_in_file, json_out_file, sampling_frequency=30):
+def process_video(video_in_file, json_out_file, sampling_frequency=3):
     cap = cv2.VideoCapture(video_in_file)
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = -1
@@ -65,7 +65,7 @@ mp_drawing = mp.solutions.drawing_utils
 pose = mp_pose.Pose()
 
 
-landmarks_json = process_video(video_in_file='./left_wrist_movement.mov', json_out_file='landmarks.json') # also returns the json
+landmarks_json = process_video(video_in_file='./movement.mov', json_out_file='landmarks.json') # also returns the json
 times = sorted(landmarks_json.keys())
 print('Times:', times) # lists each timestamp at which we have saved the body pose. This can be adjusted with the sampling_frequency parameter
 
@@ -75,24 +75,12 @@ l_wrist_mediapipe_x = [elem[0] for elem in l_wrist_poses]
 l_wrist_mediapipe_y = [elem[1] for elem in l_wrist_poses]
 l_wrist_mediapipe_z = [elem[2] for elem in l_wrist_poses]
 
-scale_factor = 1/3
-l_wrist_nao_z = [-elem * scale_factor for elem in l_wrist_mediapipe_x]
-l_wrist_nao_y = [elem * scale_factor for elem in l_wrist_mediapipe_y]
-l_wrist_nao_x = [elem * scale_factor for elem in l_wrist_mediapipe_z]
-
-with open("nao_coords.csv", "w") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Time", "LarmX", "LarmY", "LArmZ"])
-    for i in range(len(times)):
-        row = [times[i], l_wrist_nao_x[i], l_wrist_nao_y[i], l_wrist_nao_z[i]]
-        writer.writerow(row)
-
 plt.plot(times, l_wrist_mediapipe_x, label='Left Wrist X')
 plt.plot(times, l_wrist_mediapipe_y, label='Left Wrist Y')
 plt.plot(times, l_wrist_mediapipe_z, label='Left Wrist Z')
 plt.xlabel('Time (s)')
 plt.ylabel('Left Wrist Position (m)')
-plt.title('Left Wrist Position vs Time')
+plt.title('Mediapipe Left Wrist Position vs Time')
 plt.legend()
 plt.grid(True)
 plt.show()
@@ -112,3 +100,27 @@ X axis points forward
 """
 
 # Assume Nao is about 1/3rd of the height of a human
+# %%
+scale_factor = 1/3
+l_wrist_nao_z = [-elem * scale_factor for elem in l_wrist_mediapipe_x]
+l_wrist_nao_y = [elem * scale_factor + .2 for elem in l_wrist_mediapipe_y]
+l_wrist_nao_x = [elem * scale_factor + .2 for elem in l_wrist_mediapipe_z]
+
+with open("nao_coords.csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Time", "LarmX", "LarmY", "LArmZ"])
+    for i in range(len(times)):
+        row = [times[i], l_wrist_nao_x[i], l_wrist_nao_y[i], l_wrist_nao_z[i]]
+        writer.writerow(row)
+        
+        
+plt.plot(times, l_wrist_nao_x, label='Left Wrist X')
+plt.plot(times, l_wrist_nao_y, label='Left Wrist Y')
+plt.plot(times, l_wrist_nao_z, label='Left Wrist Z')
+plt.xlabel('Time (s)')
+plt.ylabel('Left Wrist Position (m)')
+plt.title('Nao Left Wrist Position vs Time')
+plt.legend()
+plt.grid(True)
+plt.show()
+# %%
