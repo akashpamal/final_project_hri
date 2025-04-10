@@ -7,6 +7,7 @@ from naoqi import ALProxy
 import codecs
 import csv
 import unicodedata
+import time
 
 from flask import Flask, request, jsonify
 app = Flask(__name__)
@@ -55,7 +56,9 @@ def move_coord(chainName, position, fractionMaxSpeed=0.6):
     # Example showing how to set LArm Position, using a fraction of max speed
     # chainName = "LArm"
     space     = motion.FRAME_TORSO
-    axisMask         = 7 # just control position
+    # axisMask         = 7 # just control position
+    axisMask         = almath.AXIS_MASK_X + almath.AXIS_MASK_Y + almath.AXIS_MASK_Z
+    # axisMask         = almath.AXIS_MASK_Y + almath.AXIS_MASK_Z
     chainName = unicodedata.normalize('NFKD', chainName).encode('ascii', 'ignore')
     print('moving', chainName, 'to', position)
     
@@ -65,16 +68,19 @@ def move_coord(chainName, position, fractionMaxSpeed=0.6):
 
     # Get the current position of the chainName in the same frame
     current = motionProxy.getPosition(chainName, frame, useSensor)
-    # position[0] = current[0]
-    position[1] = current[1]
-    position[2] = current[2]
+    position[0] = current[0]
+    # position[1] = current[1]
+    # position[2] = current[2]
     motionProxy.setPosition(chainName, space, position, fractionMaxSpeed, axisMask)
+    
     # Write desired, current to a CSV file
     # with open('positions.csv', 'a') as f:
     #     writer = csv.writer(f)
     #     writer.writerow([desired[0], desired[1], desired[2], current[0], current[1], current[2]])
     print ('desired_position:', position)
     print ('current_position:', current)
+
+# def move_angle()
 
 @app.route('/receive_json', methods=['POST'])
 def receive_json():
@@ -88,6 +94,8 @@ def receive_json():
         # print('chainName', type(chainName), chainName)
         # print('position', type(position), position)
         move_coord(chainName, position)
+    elif data['movementType'] == 'coordinate':
+        pass
     else:
         print('movementType', data['movementType'], 'not yet implemented')
     

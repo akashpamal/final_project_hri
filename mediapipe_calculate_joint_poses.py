@@ -7,6 +7,7 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 import requests
+import time
 
 """
 Given a video file and sampling_frequency, finds the landmarks and writes them out to a json file
@@ -60,8 +61,8 @@ def process_video(video_in_file, json_out_file, sampling_frequency=3):
 def mediapipe_to_nao_coords(mediapipe_coordinate):
     scale_factor = 1/3
     nao_coordinate = [mediapipe_coordinate[2] * scale_factor,
-                  mediapipe_coordinate[1] * scale_factor,
-                  -mediapipe_coordinate[0] * scale_factor]
+                  mediapipe_coordinate[0] * scale_factor,
+                  -mediapipe_coordinate[1] * scale_factor]
     return nao_coordinate
     
 def send_wrists_coords(landmarks):
@@ -74,6 +75,7 @@ def send_wrists_coords(landmarks):
         return
     l_wrist_nao = mediapipe_to_nao_coords(l_wrist_mediapipe) + [0,0,0]
     r_wrist_nao = mediapipe_to_nao_coords(r_wrist_mediapipe) + [0,0,0]
+    print('Left wrist NAO:', l_wrist_nao)
     data = {
         # "key": "value"
         "movementType": "coordinate",
@@ -81,6 +83,7 @@ def send_wrists_coords(landmarks):
         'position': l_wrist_nao,  # Example coordinates
     }
     response = requests.post(url, json=data)
+    time.sleep(1)
     
 
     # Print the server's response
@@ -123,7 +126,7 @@ def process_camera_input():
                 for idx, landmark in enumerate(result.pose_world_landmarks.landmark):
                     landmarks[mp_pose.PoseLandmark(idx).name] = [landmark.x, landmark.y, landmark.z]
                 # print('landmarks:', landmarks)
-                print('left_wrist', landmarks.get("LEFT_WRIST"))
+                # print('left_wrist', landmarks.get("LEFT_WRIST"))
                 send_wrists_coords(landmarks)
                 
                 # Add the landmarks to the dictionary (using frame count as key)
