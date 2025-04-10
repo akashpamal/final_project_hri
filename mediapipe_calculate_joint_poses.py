@@ -62,13 +62,13 @@ def process_video(video_in_file, json_out_file, sampling_frequency=3):
 def mediapipe_to_nao_coords(mediapipe_coordinate):
     scale_factor = 1/3
     nao_coordinate = [-mediapipe_coordinate[2] * scale_factor,
-                  mediapipe_coordinate[0] * scale_factor,
+                  mediapipe_coordinate[0] * scale_factor * 1.5,
                   -mediapipe_coordinate[1] * scale_factor]
     return nao_coordinate
     
 def send_wrists_coords(landmarks):
     global last_request_time
-    if datetime.now() - last_request_time < timedelta(seconds=0.5):
+    if datetime.now() - last_request_time < timedelta(seconds=1):
         return
     last_request_time = datetime.now()
 

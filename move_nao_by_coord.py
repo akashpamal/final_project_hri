@@ -60,7 +60,7 @@ def setup(robotIP):
     # # Send NAO to Pose Init
     return motionProxy
 
-def move_coord(chainName, position, fractionMaxSpeed=0.3):
+def move_coord(chainName, position, fractionMaxSpeed=0.8):
     # Example showing how to set LArm Position, using a fraction of max speed
     # chainName = "LArm"
     space     = motion.FRAME_TORSO
