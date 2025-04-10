@@ -1,4 +1,3 @@
-# %%
 '''Cartesian control: Arm trajectory example'''
 
 import sys
@@ -7,7 +6,10 @@ import almath
 from naoqi import ALProxy
 import codecs
 import csv
+import unicodedata
 
+from flask import Flask, request, jsonify
+app = Flask(__name__)
 
 def StiffnessOn(proxy):
   #We use the "Body" name to signify the collection of all joints
@@ -16,12 +18,12 @@ def StiffnessOn(proxy):
   pTimeLists = 1.0
   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
 
-# %%
-def main(robotIP):
+def setup(robotIP):
     ''' Example showing a path of two positions
     Warning: Needs a PoseInit before executing
     '''
 
+    global motionProxy
     # Init proxies.
     try:
         motionProxy = ALProxy("ALMotion", robotIP, 9559)
@@ -37,93 +39,77 @@ def main(robotIP):
 
     # Set NAO in Stiffness On
     StiffnessOn(motionProxy)
-    
-    pChainName = "LArm"
-
-    # Enable collision detection on LArm chain.
-    pEnable = False
-    success = motionProxy.setCollisionProtectionEnabled(pChainName, pEnable)
-    print('CollisionProtectionEnabled success:', success)
-
-    # Send NAO to Pose Init
     postureProxy.goToPosture("StandInit", 0.5)
-
-    effector   = "LArm"
-    space      = motion.FRAME_TORSO
-    axisMask   = almath.AXIS_MASK_VEL    # just control position
-    isAbsolute = True
     
-    times = []
-    coordinates = []
+    # pChainName = "LArm"
 
-    # Open and read the CSV file
-    with open('nao_coords.csv', 'r') as csvfile:
-        reader = csv.reader(csvfile)
-        header = next(reader)  # Skip the header row
+    # # Enable collision detection on LArm chain.
+    # pEnable = False
+    # success = motionProxy.setCollisionProtectionEnabled(pChainName, pEnable)
+    # print('CollisionProtectionEnabled success:', success)
 
-        # Extract data from each row
-        for row in reader:
-            times.append(float(row[0]))  # Add time value to times list
-            coordinates.append([float(row[1]), float(row[2]), float(row[3])])  # Add x, y, z coordinates to coordinates list
-            # Adding .09 shifts all x values up by .09, i.e. moves all points a little more forward
-    coordinates = [coordinate + [0,0,0] for coordinate in coordinates] # append empty values for the rotation in XYZ axis
-    times = [elem + 3 for elem in times] # First time must be >0
-    times = [elem * 1.5 for elem in times] # slow down the movements by some factor
-    
-    
-    times = times[:]
-    coordinates = coordinates[:]
-    print('times:', len(times), times)
-    print('coordinates:', len(coordinates), coordinates)
-    # for time in times:
-        # motionProxy.
-    motionProxy.positionInterpolations([effector], space, [coordinates], axisMask, times, isAbsolute)
-    # motionProxy.positionInterpolation(effector, space, coordinates, axisMask, times, isAbsolute)
-    
-    motionProxy.getPosition(effector, space, isAbsolute)
-    # motionProxy.positionInterpolation(effector, space, coordinates, axisMask, times, isAbsolute)
-    
-    # # Since we are in relative, the current position is zero
-    # currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    # # Send NAO to Pose Init
+    return motionProxy
 
-    # # Define the changes relative to the current position
-    # dx         =  0.00      # translation axis X (meters)
-    # dy         =  0.13     # translation axis Y (meters)
-    # dz         =  0.26      # translation axis Z (meters)
-    # dwx        =  -1.22      # rotation axis X (radians)
-    # dwy        =  0.52      # rotation axis Y (radians)
-    # dwz        =  0.01     # rotation axis Z (radians)
+def move_coord(chainName, position, fractionMaxSpeed=0.6):
+    # Example showing how to set LArm Position, using a fraction of max speed
+    # chainName = "LArm"
+    space     = motion.FRAME_TORSO
+    axisMask         = 7 # just control position
+    chainName = unicodedata.normalize('NFKD', chainName).encode('ascii', 'ignore')
+    print('moving', chainName, 'to', position)
     
-    # # dx         =  0.12336114048957825      # translation axis X (meters)
-    # # dy         =  0.1323665827512741      # translation axis Y (meters)
-    # # dz         =  0.26347923278808594      # translation axis Z (meters)
-    # # dwx        =  -1.21964430809021      # rotation axis X (radians)
-    # # dwy        =  0.5219550132751465      # rotation axis Y (radians)
-    # # dwz        =  0.01353203784674406      # rotation axis Z (radians)
-    # targetPos  = [dx, dy, dz, dwx, dwy, dwz]
+    chainName = "LArm"
+    frame     = motion.FRAME_TORSO
+    useSensor = False
+
+    # Get the current position of the chainName in the same frame
+    current = motionProxy.getPosition(chainName, frame, useSensor)
+    # position[0] = current[0]
+    position[1] = current[1]
+    position[2] = current[2]
+    motionProxy.setPosition(chainName, space, position, fractionMaxSpeed, axisMask)
+    # Write desired, current to a CSV file
+    # with open('positions.csv', 'a') as f:
+    #     writer = csv.writer(f)
+    #     writer.writerow([desired[0], desired[1], desired[2], current[0], current[1], current[2]])
+    print ('desired_position:', position)
+    print ('current_position:', current)
+
+@app.route('/receive_json', methods=['POST'])
+def receive_json():
+    # Parse JSON data from the request
+    data = request.get_json()
     
-    # pos1 = [-0.05083545049031575, -0.11260572075843811, 0.039958963791529335, 0, 0, 0]
-    # pos1 = [0.14344285428524017, 0.13446059823036194, 0.5971754789352417, -1.6460217237472534, -0.9850037693977356, 0.2681563198566437]
-    # pos2 = [0.08367110043764114, 0.09527045488357544, 0.21045847237110138, -1.5316928625106812, 1.2437962293624878, -0.1373995989561081]
 
-    # Go to the target and back again
-    # path       = [targetPos, currentPos]
-    # path       = [pos1]
-    # times      = [3.0] # seconds
-
-    # currPos = motionProxy.getPosition(effector, space, isAbsolute)
-    # print currPos
+    if data['movementType'] == 'coordinate':
+        chainName = data['chainName']
+        position = data['position']
+        # print('chainName', type(chainName), chainName)
+        # print('position', type(position), position)
+        move_coord(chainName, position)
+    else:
+        print('movementType', data['movementType'], 'not yet implemented')
     
-    # motionProxy.positionInterpolation(effector, space, path, axisMask, times, isAbsolute)
+    # chainName = "LArm"
+    # frame     = motion.FRAME_TORSO
+    # useSensor = False
+    # curr_pos = motionProxy.getPosition(chainName, frame, useSensor)
+    # past_positions.append(curr_pos)
+        
+    return jsonify({"status": "success", "received_data": data}) # Respond with a success message
 
-
+motionProxy = None
+past_positions = []
 if __name__ == "__main__":
     robotIp = "192.168.1.30"
-    # robotIp = "172.0.0.1"
+    setup(robotIp) # initializes motionProxy variable
 
-    if len(sys.argv) <= 1:
-        print "Usage python motion_cartesianArm1.py robotIP (optional default: 127.0.0.1)"
-    else:
-        robotIp = sys.argv[1]
-
-    main(robotIp)
+    app.run(port=5001)
+    """
+    {
+        "movement_type": "coordinate" // or "angle",
+        "joint_name": "LShoulderRoll",
+        "joint_angles": [0.5, 0.6, 0.7], // or "joint_coordinates": [0.1, 0.2, 0.3]
+    }
+    """
