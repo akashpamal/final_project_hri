@@ -8,6 +8,7 @@ import json
 import matplotlib.pyplot as plt
 import requests
 import time
+from datetime import datetime, timedelta
 
 """
 Given a video file and sampling_frequency, finds the landmarks and writes them out to a json file
@@ -60,13 +61,17 @@ def process_video(video_in_file, json_out_file, sampling_frequency=3):
 
 def mediapipe_to_nao_coords(mediapipe_coordinate):
     scale_factor = 1/3
-    nao_coordinate = [mediapipe_coordinate[2] * scale_factor,
+    nao_coordinate = [-mediapipe_coordinate[2] * scale_factor,
                   mediapipe_coordinate[0] * scale_factor,
                   -mediapipe_coordinate[1] * scale_factor]
     return nao_coordinate
     
 def send_wrists_coords(landmarks):
-    
+    global last_request_time
+    if datetime.now() - last_request_time < timedelta(seconds=0.5):
+        return
+    last_request_time = datetime.now()
+
     try:
         l_wrist_mediapipe = landmarks["LEFT_WRIST"]
         r_wrist_mediapipe = landmarks["RIGHT_WRIST"]
@@ -75,7 +80,17 @@ def send_wrists_coords(landmarks):
         return
     l_wrist_nao = mediapipe_to_nao_coords(l_wrist_mediapipe) + [0,0,0]
     r_wrist_nao = mediapipe_to_nao_coords(r_wrist_mediapipe) + [0,0,0]
-    print('Left wrist NAO:', l_wrist_nao)
+    
+    data = {
+        # "key": "value"
+        "movementType": "coordinate",
+        'chainName': "RArm",
+        'position': r_wrist_nao,  # Example coordinates
+    }
+    response = requests.post(url, json=data)
+    
+    time.sleep(.05)
+    
     data = {
         # "key": "value"
         "movementType": "coordinate",
@@ -83,19 +98,8 @@ def send_wrists_coords(landmarks):
         'position': l_wrist_nao,  # Example coordinates
     }
     response = requests.post(url, json=data)
-    time.sleep(1)
-    
 
-    # Print the server's response
-    # print("Response status code:", response.status_code)
-    # print('response:', response.text)
-    # data = {
-    #     # "key": "value"
-    #     "movementType": "coordinate",
-    #     'chainName': "RArm",
-    #     'position': r_wrist_nao,  # Example coordinates
-    # }
-    # response = requests.post(url, json=data)
+    
     
 # %%
 def process_camera_input():
@@ -153,6 +157,7 @@ def process_camera_input():
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 pose = mp_pose.Pose()
+last_request_time = datetime.now()
 url = "http://127.0.0.1:5001/receive_json"
 
 process_camera_input()

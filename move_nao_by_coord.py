@@ -8,6 +8,8 @@ import codecs
 import csv
 import unicodedata
 import time
+from datetime import datetime
+from datetime import timedelta
 
 from flask import Flask, request, jsonify
 app = Flask(__name__)
@@ -17,6 +19,12 @@ def StiffnessOn(proxy):
   pNames = "Body"
   pStiffnessLists = 1.0
   pTimeLists = 1.0
+  proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+  pNames = "LArm"
+  proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+  pNames = "RArm"
+  proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+  pNames = "Head"
   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
 
 def setup(robotIP):
@@ -52,7 +60,7 @@ def setup(robotIP):
     # # Send NAO to Pose Init
     return motionProxy
 
-def move_coord(chainName, position, fractionMaxSpeed=0.6):
+def move_coord(chainName, position, fractionMaxSpeed=0.3):
     # Example showing how to set LArm Position, using a fraction of max speed
     # chainName = "LArm"
     space     = motion.FRAME_TORSO
@@ -62,13 +70,13 @@ def move_coord(chainName, position, fractionMaxSpeed=0.6):
     chainName = unicodedata.normalize('NFKD', chainName).encode('ascii', 'ignore')
     print('moving', chainName, 'to', position)
     
-    chainName = "LArm"
+    # chainName = "LArm"
     frame     = motion.FRAME_TORSO
     useSensor = False
 
     # Get the current position of the chainName in the same frame
     current = motionProxy.getPosition(chainName, frame, useSensor)
-    position[0] = current[0]
+    # position[0] = current[0]
     # position[1] = current[1]
     # position[2] = current[2]
     motionProxy.setPosition(chainName, space, position, fractionMaxSpeed, axisMask)
@@ -109,6 +117,7 @@ def receive_json():
 
 motionProxy = None
 past_positions = []
+
 if __name__ == "__main__":
     robotIp = "192.168.1.30"
     setup(robotIp) # initializes motionProxy variable
