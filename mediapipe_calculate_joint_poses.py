@@ -40,15 +40,16 @@ def process_video(video_in_file, json_out_file, sampling_frequency=3):
         result = pose.process(frame_rgb)
 
         # Draw the pose landmarks on the frame
-        # if result.pose_landmarks:
-            # mp_drawing.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        if result.pose_landmarks:
+            mp_drawing.draw_landmarks(frame, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
         landmarks = dict()
         for idx, landmark in enumerate(result.pose_world_landmarks.landmark):
             landmarks[mp_pose.PoseLandmark(idx).name] = [landmark.x, landmark.y, landmark.z]
         landmarks_json[timestamp] = landmarks
         # Display the frame
-        # cv2.imshow('MediaPipe Pose', frame)
+        cv2.imshow('MediaPipe Pose', frame)
+        cv2.waitKey(33)
 
         # Exit if 'q' keypyt
     with open(json_out_file, 'w', encoding='utf-8') as json_file:
