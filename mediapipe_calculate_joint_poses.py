@@ -68,7 +68,7 @@ def mediapipe_to_nao_coords(mediapipe_coordinate):
     
 def send_wrists_coords(landmarks):
     global last_request_time
-    if datetime.now() - last_request_time < timedelta(seconds=1):
+    if datetime.now() - last_request_time < timedelta(seconds=1.5):
         return
     last_request_time = datetime.now()
 
@@ -104,8 +104,8 @@ def send_wrists_coords(landmarks):
 # %%
 def process_camera_input():
     # Initialize MediaPipe Pose
-    with mp_pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False, min_detection_confidence=0.5) as pose:
-        cap = cv2.VideoCapture(0)  # Open the default camera (camera index 0)
+    with mp_pose.Pose(static_image_mode=False, model_complexity=2, enable_segmentation=False, min_detection_confidence=0.5) as pose:
+        cap = cv2.VideoCapture(1)  # Open the default camera (camera index 0)
         # landmarks_json = dict()  # Dictionary to store landmarks for each frame
         
         frame_count = -1
@@ -156,7 +156,7 @@ def process_camera_input():
 # Initialize MediaPipe Pose and Drawing utilities
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
-pose = mp_pose.Pose()
+pose = mp_pose.Pose(model_complexity=2)
 last_request_time = datetime.now()
 url = "http://127.0.0.1:5001/receive_json"
 

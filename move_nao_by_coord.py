@@ -50,12 +50,11 @@ def setup(robotIP):
     StiffnessOn(motionProxy)
     postureProxy.goToPosture("StandInit", 0.5)
     
-    # pChainName = "LArm"
 
     # # Enable collision detection on LArm chain.
-    # pEnable = False
-    # success = motionProxy.setCollisionProtectionEnabled(pChainName, pEnable)
-    # print('CollisionProtectionEnabled success:', success)
+    pEnable = True
+    success = motionProxy.setCollisionProtectionEnabled('LArm', pEnable)
+    success = motionProxy.setCollisionProtectionEnabled('RArm', pEnable)
 
     # # Send NAO to Pose Init
     return motionProxy

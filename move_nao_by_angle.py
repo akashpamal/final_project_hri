@@ -6,7 +6,7 @@ import codecs
 
 angles_data = []
 
-csv_path = 'C:/Users/ishah/OneDrive/Documents/HRI/final_project_hri/nao_angles.csv'
+csv_path = './nao_angles.csv'
 
 # Supply fieldnames manually since the CSV file has no header row.
 fieldnames = ["Time", "RShoulderRoll", "LShoulderRoll"]

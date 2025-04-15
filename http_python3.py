@@ -7,8 +7,8 @@ url = "http://127.0.0.1:5001/receive_json"
 data = {
     # "key": "value"
     "movementType": "coordinate",
-    'chainName': "LArm",
-    'position': [0.21874918639659882, 0.233122056722641, 0.05574030280113221, -1.2169694900512695, 0.4153057932853699, 0.012793183326721191],  # Example coordinates
+    'chainName': "RArm",
+    'position': [0.11874917894601822, -0.1331220269203186, -0.0442596971988678, 1.216969609260559, 0.4153057336807251, -0.012792954221367836],  # Example coordinates
 }
 
 # Send the POST request
