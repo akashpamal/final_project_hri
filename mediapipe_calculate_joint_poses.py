@@ -1,4 +1,3 @@
-# %%
 import cv2
 import mediapipe as mp
 import csv
@@ -67,7 +66,7 @@ def mediapipe_to_nao_coords(mediapipe_coordinate):
     return nao_coordinate
     
 def send_wrists_coords(landmarks):
-    global last_request_time
+    global last_request_time, save_file
     if datetime.now() - last_request_time < timedelta(seconds=1.5):
         return
     last_request_time = datetime.now()
@@ -87,7 +86,13 @@ def send_wrists_coords(landmarks):
         'chainName': "RArm",
         'position': r_wrist_nao,  # Example coordinates
     }
-    response = requests.post(url, json=data)
+    # response = requests.post(url, json=data)
+    
+    elapsed_time = datetime.now() - program_start_time
+    if save_file: # write the elapsed_time and HTTP request as a string to the file
+        with open(save_file, 'a') as f:
+            f.write(f"{elapsed_time.total_seconds()},{json.dumps(data)}\n")
+            
     
     time.sleep(.05)
     
@@ -97,14 +102,19 @@ def send_wrists_coords(landmarks):
         'chainName': "LArm",
         'position': l_wrist_nao,  # Example coordinates
     }
-    response = requests.post(url, json=data)
+    # response = requests.post(url, json=data)
+    
+    elapsed_time = datetime.now() - program_start_time
+    if save_file: # write the elapsed_time and HTTP request as a string to the file
+        with open(save_file, 'a') as f:
+            f.write(f"{elapsed_time.total_seconds()},{json.dumps(data)}\n")
 
     
     
 # %%
 def process_camera_input():
     # Initialize MediaPipe Pose
-    with mp_pose.Pose(static_image_mode=False, model_complexity=2, enable_segmentation=False, min_detection_confidence=0.5) as pose:
+    with mp_pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False, min_detection_confidence=0.5) as pose:
         cap = cv2.VideoCapture(1)  # Open the default camera (camera index 0)
         # landmarks_json = dict()  # Dictionary to store landmarks for each frame
         
@@ -149,16 +159,17 @@ def process_camera_input():
         # Release the camera and close OpenCV windows
         cap.release()
         cv2.destroyAllWindows()
-        
-        # Print the landmarks JSON
-        # print(json.dumps(landmarks_json, indent=4))
 
 # Initialize MediaPipe Pose and Drawing utilities
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
-pose = mp_pose.Pose(model_complexity=2)
+pose = mp_pose.Pose(model_complexity=1)
 last_request_time = datetime.now()
+program_start_time = datetime.now()
 url = "http://127.0.0.1:5001/receive_json"
+
+
+save_file = input("\n\nSave behavior to file? Press enter to ignore or type behavior name here:\n\n")
 
 process_camera_input()
 """
