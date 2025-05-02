@@ -16,16 +16,16 @@ app = Flask(__name__)
 
 def StiffnessOn(proxy):
   #We use the "Body" name to signify the collection of all joints
-  pNames = "Body"
+#   pNames = "Body"
   pStiffnessLists = 1.0
   pTimeLists = 1.0
-  proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+#   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
   pNames = "LArm"
   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
   pNames = "RArm"
   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
-  pNames = "Head"
-  proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+#   pNames = "Head"
+#   proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
 
 def setup(robotIP):
     ''' Example showing a path of two positions
@@ -50,9 +50,17 @@ def setup(robotIP):
     StiffnessOn(motionProxy)
     postureProxy.goToPosture("StandInit", 0.5)
     
+    # Make NAO say "welcome! I will try to copy your movements"
+    try:
+        ttsProxy = ALProxy("ALTextToSpeech", robotIP, 9559)
+        ttsProxy.say("Welcome! I will try to copy your movements.")
+    except Exception as e:
+        print("Could not create proxy to ALTextToSpeech")
+        print("Error was: ", e)
+    
 
     # # Enable collision detection on LArm chain.
-    pEnable = True
+    pEnable = False
     success = motionProxy.setCollisionProtectionEnabled('LArm', pEnable)
     success = motionProxy.setCollisionProtectionEnabled('RArm', pEnable)
 

@@ -86,7 +86,7 @@ def send_wrists_coords(landmarks):
         'chainName': "RArm",
         'position': r_wrist_nao,  # Example coordinates
     }
-    # response = requests.post(url, json=data)
+    response = requests.post(url, json=data)
     
     elapsed_time = datetime.now() - program_start_time
     if save_file: # write the elapsed_time and HTTP request as a string to the file
@@ -102,7 +102,7 @@ def send_wrists_coords(landmarks):
         'chainName': "LArm",
         'position': l_wrist_nao,  # Example coordinates
     }
-    # response = requests.post(url, json=data)
+    response = requests.post(url, json=data)
     
     elapsed_time = datetime.now() - program_start_time
     if save_file: # write the elapsed_time and HTTP request as a string to the file
